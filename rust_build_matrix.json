@@ -26,7 +26,7 @@
     {
       "os": "macos",
       "arch": "x86_64",
-      "runner": "macos-13",
+      "runner": "macos-latest",
       "target": "x86_64-apple-darwin",
       "suffix": "macos-x86_64-zone",
       "pre_build_script": null,
