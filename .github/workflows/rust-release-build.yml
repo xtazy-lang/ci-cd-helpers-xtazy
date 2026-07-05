@@ -197,7 +197,6 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          path: dist
           merge-multiple: true
 
       - name: Write version.txt
@@ -209,7 +208,7 @@ jobs:
         with:
           result-files-file: ${{ inputs['result-files-file'] }}
           artifact-dir: dist
-          artifact-manifest-dir: dist/artifact-manifests
+          artifact-manifest-dir: artifact-manifests
           version-file: version.txt
           output-list: .result-files.list
 
