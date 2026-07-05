@@ -1,0 +1,236 @@
+name: Rust Release Build
+
+on:
+  workflow_call:
+    inputs:
+      binary-name:
+        required: true
+        type: string
+      artifact-prefix:
+        required: false
+        type: string
+        default: ""
+      package-name:
+        required: false
+        type: string
+        default: ""
+      matrix-file:
+        required: false
+        type: string
+        default: ""
+      result-files-file:
+        required: false
+        type: string
+        default: ""
+      version-source:
+        required: false
+        type: string
+        default: auto
+      cargo-args:
+        required: false
+        type: string
+        default: ""
+      package-format:
+        required: false
+        type: string
+        default: tar.gz
+      result-command:
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v4
+
+      - name: Checkout helper repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .ci-cd-helpers
+
+      - id: version
+        uses: ./.ci-cd-helpers/.github/actions/version-file
+        with:
+          source: ${{ inputs['version-source'] }}
+          cargo-package: ${{ inputs['package-name'] }}
+
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v4
+
+      - name: Checkout helper repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .ci-cd-helpers
+
+      - id: matrix
+        uses: ./.ci-cd-helpers/.github/actions/rust-build-matrix
+        with:
+          matrix-file: ${{ inputs['matrix-file'] }}
+
+  build:
+    needs:
+      - version
+      - matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v4
+
+      - name: Checkout helper repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .ci-cd-helpers
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: ./.ci-cd-helpers/.github/actions/pre-build-hook
+        with:
+          script: ${{ matrix.pre_build_script }}
+
+      - name: Build
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ inputs['package-format'] }}" != "tar.gz" ]]; then
+            echo "unsupported package-format: ${{ inputs['package-format'] }}" >&2
+            echo "this reusable workflow currently packages release outputs as tar.gz" >&2
+            exit 1
+          fi
+          cargo build --release --target "${{ matrix.target }}" ${{ inputs['cargo-args'] }}
+
+      - name: Stage binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          prefix="${{ inputs['artifact-prefix'] }}"
+          if [[ -z "$prefix" ]]; then
+            prefix="${{ inputs['binary-name'] }}"
+          fi
+          binary="${{ inputs['binary-name'] }}"
+          source="target/${{ matrix.target }}/release/$binary"
+          if [[ "${{ matrix.family }}" == "windows" ]]; then
+            source="${source}.exe"
+          fi
+          mkdir -p "dist/${prefix}"
+          cp "$source" "dist/${prefix}/"
+          echo "ARTIFACT_PREFIX=$prefix" >> "$GITHUB_ENV"
+          echo "ARCHIVE=dist/${prefix}-${{ needs.version.outputs.version }}-${{ matrix.suffix }}.tar.gz" >> "$GITHUB_ENV"
+
+      - uses: ./.ci-cd-helpers/.github/actions/pack-tar-gz
+        with:
+          source: dist/${{ env.ARTIFACT_PREFIX }}
+          output: ${{ env.ARCHIVE }}
+          root-name: ${{ env.ARTIFACT_PREFIX }}
+
+      - uses: ./.ci-cd-helpers/.github/actions/artifact-manifest
+        with:
+          artifact: ${{ env.ARCHIVE }}
+          output: artifact-manifests/${{ matrix.suffix }}.json
+          version: ${{ needs.version.outputs.version }}
+          prefix: ${{ env.ARTIFACT_PREFIX }}
+          suffix: ${{ matrix.suffix }}
+          family: ${{ matrix.family }}
+          lookup-os: ${{ matrix.lookup_os }}
+          lookup-arch: ${{ toJson(matrix.lookup_arch) }}
+          archive-format: ${{ inputs['package-format'] }}
+          target: ${{ matrix.target }}
+          os: ${{ matrix.os }}
+          arch: ${{ matrix.arch }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-${{ matrix.suffix }}
+          path: |
+            ${{ env.ARCHIVE }}
+            artifact-manifests/${{ matrix.suffix }}.json
+
+  results:
+    needs:
+      - version
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v4
+
+      - name: Checkout helper repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .ci-cd-helpers
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Write version.txt
+        shell: bash
+        run: printf '%s\n' '${{ needs.version.outputs.version }}' > version.txt
+
+      - if: ${{ inputs['result-files-file'] != '' }}
+        uses: ./.ci-cd-helpers/.github/actions/result-files
+        with:
+          result-files-file: ${{ inputs['result-files-file'] }}
+          artifact-dir: dist
+          artifact-manifest-dir: dist/artifact-manifests
+          version-file: version.txt
+          output-list: .result-files.list
+
+      - name: Result hook
+        if: ${{ inputs['result-command'] != '' }}
+        shell: bash
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          DIST_DIR: dist
+          RESULT_FILES_LIST: .result-files.list
+        run: ${{ inputs['result-command'] }}
+
+      - name: Stage release results
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf release-results
+          mkdir -p release-results
+          cp version.txt release-results/
+          if [[ -f .result-files.list ]]; then
+            cp .result-files.list release-results/
+            while IFS= read -r file; do
+              [[ -n "$file" ]] || continue
+              if [[ "$file" = /* || "$file" == ../* || "$file" == */../* ]]; then
+                echo "refusing unsafe result path: $file" >&2
+                exit 1
+              fi
+              mkdir -p "release-results/$(dirname "$file")"
+              cp "$file" "release-results/$file"
+            done < .result-files.list
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-results
+          path: |
+            release-results/**
+            dist/**/*.tar.gz

@@ -1,0 +1,23 @@
+{
+  "bg_dark": "#09090b",
+  "bg_sidebar": "#18181b",
+  "bg_content": "#09090b",
+  "text_color": "#f4f4f5",
+  "text_dim": "#a1a1aa",
+  "primary": "#3b82f6",
+  "secondary": "#a855f7",
+  "border_color": "#27272a",
+  "font_family": "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+  "logo_alt": "Documentation",
+  "logo_href": "index.html",
+  "bg_dark_light": "#f4f4f5",
+  "bg_sidebar_light": "#f4f4f5",
+  "bg_content_light": "#ffffff",
+  "text_color_light": "#18181b",
+  "text_dim_light": "#52525b",
+  "border_color_light": "#e4e4e7",
+  "primary_light": "#2563eb",
+  "secondary_light": "#7c3aed",
+  "docs_home": null,
+  "link_rewrites": []
+}

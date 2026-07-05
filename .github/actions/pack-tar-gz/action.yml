@@ -1,0 +1,28 @@
+name: Pack tar.gz
+description: Create a deterministic tar.gz archive.
+inputs:
+  source:
+    required: true
+    description: File or directory to archive.
+  output:
+    required: true
+    description: Output archive path.
+  root-name:
+    required: false
+    default: ""
+    description: Root name inside the archive.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -euo pipefail
+        root="$(cd "$GITHUB_ACTION_PATH/../../.." && pwd)"
+        args=(
+          "${{ inputs.source }}"
+          --out "${{ inputs.output }}"
+        )
+        if [[ -n "${{ inputs['root-name'] }}" ]]; then
+          args+=(--root-name "${{ inputs['root-name'] }}")
+        fi
+        python3 "$root/scripts/pack_tar_gz.py" "${args[@]}"

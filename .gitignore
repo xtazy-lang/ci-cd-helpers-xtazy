@@ -1,0 +1,13 @@
+.DS_Store
+__pycache__/
+docs-out/
+dist/
+target/
+artifact-manifests/
+*.xsig
+*.xsigfile
+.result-files.list
+release-results/
+targets.tsv
+version.txt
+scripts/docs_site/.temp_api_docs/

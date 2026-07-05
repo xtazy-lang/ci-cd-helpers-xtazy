@@ -1,0 +1,28 @@
+name: Rust Build Matrix
+description: Emit a Rust build matrix from a JSON matrix file.
+inputs:
+  matrix-file:
+    description: Path to the matrix JSON file.
+    required: false
+    default: rust_build_matrix.json
+outputs:
+  matrix:
+    description: Compact GitHub Actions matrix JSON.
+    value: ${{ steps.matrix.outputs.matrix }}
+runs:
+  using: composite
+  steps:
+    - id: matrix
+      shell: bash
+      run: |
+        set -euo pipefail
+        root="$(cd "$GITHUB_ACTION_PATH/../../.." && pwd)"
+        matrix_file="${{ inputs['matrix-file'] }}"
+        if [[ -z "$matrix_file" ]]; then
+          matrix_file="$root/rust_build_matrix.json"
+        elif [[ "$matrix_file" != /* ]]; then
+          matrix_file="$GITHUB_WORKSPACE/$matrix_file"
+        fi
+        python3 "$root/scripts/rust_matrix.py" github \
+          --matrix "$matrix_file" \
+          --output-name matrix

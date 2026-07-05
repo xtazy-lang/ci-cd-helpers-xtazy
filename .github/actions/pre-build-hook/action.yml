@@ -1,0 +1,33 @@
+name: Pre-build Hook
+description: Run a named pre-build script from the caller repo or helper repo.
+inputs:
+  script:
+    required: false
+    default: ""
+    description: Script name or path. Empty means no hook.
+  project-dir:
+    required: false
+    default: "."
+    description: Project directory passed to the hook.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -euo pipefail
+        script="${{ inputs.script }}"
+        if [[ -z "$script" || "$script" == "null" ]]; then
+          exit 0
+        fi
+
+        helper_root="$(cd "$GITHUB_ACTION_PATH/../../.." && pwd)"
+        if [[ -f "$script" ]]; then
+          bash "$script" "${{ inputs['project-dir'] }}"
+        elif [[ -f ".github/scripts/$script" ]]; then
+          bash ".github/scripts/$script" "${{ inputs['project-dir'] }}"
+        elif [[ -f "$helper_root/scripts/$script" ]]; then
+          bash "$helper_root/scripts/$script" "${{ inputs['project-dir'] }}"
+        else
+          echo "pre-build script not found: $script" >&2
+          exit 1
+        fi

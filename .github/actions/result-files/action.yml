@@ -1,0 +1,48 @@
+name: Result Files
+description: Generate release result files from a JSON result spec.
+inputs:
+  result-files-file:
+    required: false
+    default: ""
+    description: Path to a result file spec JSON. Empty uses this helper repo default.
+  artifact-dir:
+    required: false
+    default: dist
+    description: Directory containing release archives.
+  artifact-manifest-dir:
+    required: false
+    default: dist/artifact-manifests
+    description: Directory containing artifact manifest JSON files.
+  version-file:
+    required: false
+    default: version.txt
+    description: File containing the release version.
+  output-list:
+    required: false
+    default: .result-files.list
+    description: File that receives generated result file paths.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -euo pipefail
+        root="$(cd "$GITHUB_ACTION_PATH/../../.." && pwd)"
+
+        result_files_file="${{ inputs['result-files-file'] }}"
+        if [[ -z "$result_files_file" ]]; then
+          result_files_file="$root/result_files.default.json"
+        elif [[ "$result_files_file" != /* ]]; then
+          result_files_file="$GITHUB_WORKSPACE/$result_files_file"
+        fi
+
+        args=(
+          generate
+          --spec "$result_files_file"
+          --artifact-dir "${{ inputs['artifact-dir'] }}"
+          --artifact-manifest-dir "${{ inputs['artifact-manifest-dir'] }}"
+          --version-file "${{ inputs['version-file'] }}"
+          --list-out "${{ inputs['output-list'] }}"
+        )
+
+        python3 "$root/scripts/result_files.py" "${args[@]}"

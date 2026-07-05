@@ -1,0 +1,35 @@
+name: Version File
+description: Derive a release version and write version.txt.
+inputs:
+  source:
+    required: false
+    default: auto
+    description: auto, github-tag, or cargo.
+  cargo-package:
+    required: false
+    default: ""
+    description: Cargo package name used when deriving from Cargo metadata.
+  output-file:
+    required: false
+    default: version.txt
+    description: Output version file.
+outputs:
+  version:
+    description: Derived release version.
+    value: ${{ steps.version.outputs.version }}
+runs:
+  using: composite
+  steps:
+    - id: version
+      shell: bash
+      run: |
+        set -euo pipefail
+        root="$(cd "$GITHUB_ACTION_PATH/../../.." && pwd)"
+        args=(
+          --source "${{ inputs.source }}"
+          --out "${{ inputs['output-file'] }}"
+        )
+        if [[ -n "${{ inputs['cargo-package'] }}" ]]; then
+          args+=(--cargo-package "${{ inputs['cargo-package'] }}")
+        fi
+        python3 "$root/scripts/release_version.py" "${args[@]}"

@@ -1,0 +1,37 @@
+name: Release Guard
+description: Validate a release version from a manifest against existing semver tags.
+inputs:
+  manifest:
+    required: false
+    default: Cargo.toml
+    description: Cargo manifest path to read package.version from.
+  tag-prefix:
+    required: false
+    default: v
+    description: Git tag prefix.
+outputs:
+  version:
+    description: Validated release version.
+    value: ${{ steps.guard.outputs.version }}
+  tag:
+    description: Release tag, including prefix.
+    value: ${{ steps.guard.outputs.tag }}
+  latest_version:
+    description: Latest existing semver tag version without prefix, if any.
+    value: ${{ steps.guard.outputs.latest_version }}
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -euo pipefail
+        git fetch --tags --force
+
+    - id: guard
+      shell: bash
+      run: |
+        set -euo pipefail
+        root="$(cd "$GITHUB_ACTION_PATH/../../.." && pwd)"
+        python3 "$root/scripts/release_guard.py" check \
+          --manifest "${{ inputs.manifest }}" \
+          --tag-prefix "${{ inputs['tag-prefix'] }}"

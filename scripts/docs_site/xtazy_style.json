@@ -1,0 +1,28 @@
+{
+  "bg_dark": "#1e191c",
+  "bg_sidebar": "#120219",
+  "bg_content": "#1e191c",
+  "text_color": "#ffffff",
+  "text_dim": "#e2e2e2",
+  "primary": "#20f220",
+  "secondary": "#c30bff",
+  "border_color": "#68078c",
+  "font_family": "'Atkinson Hyperlegible Mono', monospace",
+  "logo_alt": "xtazy",
+  "logo_href": "https://xtazy.dev",
+  "bg_dark_light": "#f4f0f3",
+  "bg_sidebar_light": "#fdfafc",
+  "bg_content_light": "#f4f0f3",
+  "text_color_light": "#2a1b25",
+  "text_dim_light": "#6a5665",
+  "border_color_light": "#dca1f5",
+  "primary_light": "#0f9a0f",
+  "secondary_light": "#8d00ba",
+  "docs_home": "https://docs.xtazy.dev",
+  "link_rewrites": [
+    {
+      "pattern": "https?://docs\\.[a-zA-Z0-9_-]+\\.xtazy\\.dev/?",
+      "target": "{back_to_root}api/index.html"
+    }
+  ]
+}

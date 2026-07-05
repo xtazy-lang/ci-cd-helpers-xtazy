@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page_title }} - {{ project_name }} Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,200..800;1,200..800&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+  <style>
+    {% include "styles.css" %}
+  </style>
+  
+  {% macro render_api_sidebar(api_sidebar) %}
+  <div class="api-sidebar-nested">
+    <div class="api-sidebar-tree">
+      {% for step in api_sidebar.path_tree_steps %}
+        <div class="api-tree-step" style="padding-left: {{ step.indent * 0.6 }}rem; margin-bottom: 0.2rem;">
+          {% if step.link %}
+            <a class="sidebar-link back-link" href="{{ step.link }}" style="font-size: 0.85rem; padding: 0.2rem 0.4rem; display: inline-flex; align-items: center;" title="{{ step.name }}">
+              <span class="back-arrow" style="margin-right: 4px; opacity: 0.7;">&lt;</span>
+              <span class="sidebar-link-name">{{ step.name }}</span>
+            </a>
+          {% else %}
+            <span class="sidebar-link-text {% if step.active %}active{% endif %}" style="font-size: 0.85rem; padding: 0.2rem 0.4rem; display: inline-block;" title="{{ step.name }}">
+              {{ step.name }}
+            </span>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="api-sidebar-children" style="padding-left: {{ (api_sidebar.path_tree_steps | length) * 0.6 }}rem;">
+      {% if api_sidebar.submodules %}
+        <div class="api-sidebar-section">
+          <div class="api-sidebar-header">Modules</div>
+          <ul class="sidebar-menu" style="gap: 0.15rem;">
+            {% for item in api_sidebar.submodules %}
+              <li style="position: relative;">
+                <a class="sidebar-link {% if item.active %}active{% endif %}" href="{{ item.filename }}" style="font-size: 0.85rem; padding: 0.3rem 0.5rem;" title="{{ item.name }}">
+                  {{ item.badge | safe }}
+                  <span class="sidebar-link-name">{{ item.name }}</span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      {% if api_sidebar.structs %}
+        <div class="api-sidebar-section">
+          <div class="api-sidebar-header">Structs</div>
+          <ul class="sidebar-menu" style="gap: 0.15rem;">
+            {% for item in api_sidebar.structs %}
+              <li style="position: relative;">
+                <a class="sidebar-link {% if item.active %}active{% endif %}" href="{{ item.filename }}" style="font-size: 0.85rem; padding: 0.3rem 0.5rem;" title="{{ item.name }}">
+                  {{ item.badge | safe }}
+                  <span class="sidebar-link-name">{{ item.name }}</span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      {% if api_sidebar.enums %}
+        <div class="api-sidebar-section">
+          <div class="api-sidebar-header">Enums</div>
+          <ul class="sidebar-menu" style="gap: 0.15rem;">
+            {% for item in api_sidebar.enums %}
+              <li style="position: relative;">
+                <a class="sidebar-link {% if item.active %}active{% endif %}" href="{{ item.filename }}" style="font-size: 0.85rem; padding: 0.3rem 0.5rem;" title="{{ item.name }}">
+                  {{ item.badge | safe }}
+                  <span class="sidebar-link-name">{{ item.name }}</span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      {% if api_sidebar.traits %}
+        <div class="api-sidebar-section">
+          <div class="api-sidebar-header">Traits</div>
+          <ul class="sidebar-menu" style="gap: 0.15rem;">
+            {% for item in api_sidebar.traits %}
+              <li style="position: relative;">
+                <a class="sidebar-link {% if item.active %}active{% endif %}" href="{{ item.filename }}" style="font-size: 0.85rem; padding: 0.3rem 0.5rem;" title="{{ item.name }}">
+                  {{ item.badge | safe }}
+                  <span class="sidebar-link-name">{{ item.name }}</span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      {% if api_sidebar.functions %}
+        <div class="api-sidebar-section">
+          <div class="api-sidebar-header">Functions</div>
+          <ul class="sidebar-menu" style="gap: 0.15rem;">
+            {% for item in api_sidebar.functions %}
+              <li style="position: relative;">
+                <a class="sidebar-link {% if item.active %}active{% endif %}" href="{{ item.filename }}" style="font-size: 0.85rem; padding: 0.3rem 0.5rem;" title="{{ item.name }}">
+                  {{ item.badge | safe }}
+                  <span class="sidebar-link-name">{{ item.name }}</span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      {% if api_sidebar.constants %}
+        <div class="api-sidebar-section">
+          <div class="api-sidebar-header">Constants</div>
+          <ul class="sidebar-menu" style="gap: 0.15rem;">
+            {% for item in api_sidebar.constants %}
+              <li style="position: relative;">
+                <a class="sidebar-link {% if item.active %}active{% endif %}" href="{{ item.filename }}" style="font-size: 0.85rem; padding: 0.3rem 0.5rem;" title="{{ item.name }}">
+                  {{ item.badge | safe }}
+                  <span class="sidebar-link-name">{{ item.name }}</span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      {% if api_sidebar.type_aliases %}
+        <div class="api-sidebar-section">
+          <div class="api-sidebar-header">Type Aliases</div>
+          <ul class="sidebar-menu" style="gap: 0.15rem;">
+            {% for item in api_sidebar.type_aliases %}
+              <li style="position: relative;">
+                <a class="sidebar-link {% if item.active %}active{% endif %}" href="{{ item.filename }}" style="font-size: 0.85rem; padding: 0.3rem 0.5rem;" title="{{ item.name }}">
+                  {{ item.badge | safe }}
+                  <span class="sidebar-link-name">{{ item.name }}</span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endmacro %}
+
+  {% macro render_source_sidebar(source_files_list, back_to_api_index) %}
+  <div class="api-sidebar-nested">
+    <div class="api-sidebar-tree">
+      <div class="api-tree-step" style="padding-left: 0rem; margin-bottom: 0.2rem;">
+        <a class="sidebar-link back-link" href="{{ back_to_api_index }}" style="font-size: 0.85rem; padding: 0.2rem 0.4rem; display: inline-flex; align-items: center;" title="Back to Code Reference">
+          <span class="back-arrow" style="margin-right: 4px; opacity: 0.7;">&lt;</span>
+          <span class="sidebar-link-name">files</span>
+        </a>
+      </div>
+    </div>
+    
+    <div class="api-sidebar-children" style="padding-left: 0.6rem;">
+      <div class="api-sidebar-section">
+        <ul class="sidebar-menu" style="gap: 0.15rem;">
+          {% for f in source_files_list %}
+            <li>
+              <a class="sidebar-link {% if f.active %}active{% endif %}" href="{{ f.relative_path }}" style="font-size: 0.85rem; padding: 0.3rem 0.5rem;" title="{{ f.name }}">
+                <span class="sidebar-link-name">{{ f.name }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  {% endmacro %}
+</head>
+<body>
+
+  <header class="mobile-header">
+    <a href="{{ logo_href }}" class="mobile-brand">
+      {% if logo_url %}
+        <img class="mobile-logo" src="{{ logo_url }}" alt="{{ logo_alt }}">
+      {% else %}
+        <span class="sidebar-logo-text">{{ project_name }}</span>
+      {% endif %}
+    </a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle Navigation">☰</button>
+  </header>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      {% if logo_url %}
+        <a href="{{ logo_href }}" class="sidebar-logo-link">
+          <img class="sidebar-logo" src="{{ logo_url }}" alt="{{ logo_alt }}">
+        </a>
+      {% else %}
+        <a href="{{ logo_href }}" class="sidebar-logo-link">
+          <span class="sidebar-logo-text">{{ project_name }}</span>
+        </a>
+      {% endif %}
+    </div>
+    <nav>
+      <ul class="sidebar-menu">
+        {% if styles.docs_home %}
+          <!-- 1. Docs home backlink -->
+          <li>
+            <a class="sidebar-link docs-home-link" href="{{ styles.docs_home }}" style="position: relative;" title="docs home">
+              <span class="back-arrow-left">←</span>
+              <span class="sidebar-link-name">docs home</span>
+            </a>
+          </li>
+          
+          <!-- 2. Repository Name Link Header & Child Pages -->
+          <li class="sidebar-repo-group">
+            <a class="sidebar-link repo-header-link active" href="{{ back_to_root }}index.html" title="{{ repo_name | default(project_name) }}">
+              <svg class="menu-chevron expanded" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span class="sidebar-link-name">{{ repo_name | default(project_name) }}</span>
+            </a>
+            
+            <ul class="sidebar-repo-subitems" style="list-style: none; padding-left: 0; display: flex; flex-direction: column; gap: 0.15rem; border-left: 1px dashed var(--border-color); margin-left: 0.6rem;">
+              
+              <!-- If we are in code reference (is_api_page is True), show compacted items -->
+              {% if is_api_page %}
+                <!-- Compacted trigger accordion wrapper -->
+                <li class="compacted-menu-wrapper" style="list-style: none; margin: 0; padding: 0; position: relative;">
+                  <!-- Expanded items container (same size and position as normal) -->
+                  <div id="compacted-menu-expanded-container" class="compacted-expanded-container">
+                    <ul id="compacted-menu-items" style="list-style: none; padding-left: 0; margin: 0; display: flex; flex-direction: column; gap: 0.15rem;">
+                      {% for page in menu_items %}
+                        {% if page.title != "Code Reference" %}
+                          <li>
+                            <a class="sidebar-link" href="{{ page.relative_path }}" title="{{ page.title }}">
+                              <span class="sidebar-link-name">{{ page.title }}</span>
+                            </a>
+                          </li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
+                  </div>
+
+                  <!-- Trigger Header Area (always visible, height 36px) -->
+                  <div class="compacted-trigger-header" style="height: 36px; position: relative;">
+                    <button id="compacted-menu-trigger" style="position: absolute; left: -50px; top: 0; height: 36px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; z-index: 5; outline: none; width: 100px;" title="Toggle hidden pages">
+                      <!-- Mask to cover the parent list's dashed border-left -->
+                      <div class="line-mask" style="position: absolute; left: 49px; top: 0; width: 3px; height: 36px; background-color: var(--bg-sidebar); z-index: 1;"></div>
+                      
+                      <!-- Dash segments aligning with parent's dashed border -->
+                      <div class="trigger-line-top" style="position: absolute; left: 50px; top: 0; height: 8px; border-left: 1px dashed var(--border-color); z-index: 2;"></div>
+                      <div class="trigger-line-bottom" style="position: absolute; left: 50px; bottom: 0; height: 8px; border-left: 1px dashed var(--border-color); z-index: 2;"></div>
+                      
+                      <!-- The badge, centered exactly on the line -->
+                      <span class="compact-badge" style="position: absolute; left: 50px; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; z-index: 3;">{{ menu_items | length - 1 }} show</span>
+                    </button>
+                  </div>
+                </li>
+                
+                <!-- The active Code Reference item and its nested API sidebar -->
+                {% for page in menu_items %}
+                  {% if page.title == "Code Reference" %}
+                    <li>
+                      <a class="sidebar-link active sub-has-chevron" href="{{ page.relative_path }}" style="font-weight: 600;" title="Code Reference">
+                        <svg class="menu-chevron expanded" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                        <span class="sidebar-link-name">Code Reference</span>
+                      </a>
+                      {% if api_sidebar %}
+                        {{ render_api_sidebar(api_sidebar) }}
+                      {% elif is_source_page %}
+                        {{ render_source_sidebar(source_files_list, back_to_api_index) }}
+                      {% endif %}
+                    </li>
+                  {% endif %}
+                {% endfor %}
+                
+              {% else %}
+                <!-- Normal view (not Code Reference): show all subitems normally -->
+                {% for page in menu_items %}
+                  <li>
+                    <a class="sidebar-link {% if page.active %}active{% endif %} {% if page.title == 'Code Reference' %}sub-has-chevron{% endif %}" href="{{ page.relative_path }}" title="{{ page.title }}">
+                      {% if page.title == "Code Reference" %}
+                        <svg class="menu-chevron collapsed" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      {% endif %}
+                      <span class="sidebar-link-name">{{ page.title }}</span>
+                    </a>
+                    {% if page.title == "Code Reference" %}
+                      {% if api_sidebar %}
+                        {{ render_api_sidebar(api_sidebar) }}
+                      {% elif is_source_page %}
+                        {{ render_source_sidebar(source_files_list, back_to_api_index) }}
+                      {% endif %}
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              {% endif %}
+              
+            </ul>
+          </li>
+        {% else %}
+          <!-- Standard menu layout when docs_home is NOT set -->
+          {% for page in menu_items %}
+            <li>
+              <a class="sidebar-link {% if page.active %}active{% endif %} {% if page.title == 'Code Reference' %}sub-has-chevron{% endif %}" href="{{ page.relative_path }}" title="{{ page.title }}">
+                {% if page.title == "Code Reference" %}
+                  <svg class="menu-chevron {% if page.active or api_sidebar %}expanded{% else %}collapsed{% endif %}" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                {% endif %}
+                <span class="sidebar-link-name">{{ page.title }}</span>
+              </a>
+              {% if page.title == "Code Reference" %}
+                {% if api_sidebar %}
+                  {{ render_api_sidebar(api_sidebar) }}
+                {% elif is_source_page %}
+                  {{ render_source_sidebar(source_files_list, back_to_api_index) }}
+                {% endif %}
+              {% endif %}
+            </li>
+          {% endfor %}
+        {% endif %}
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main-container">
+    <div class="top-nav-bar">
+      <!-- Search bar -->
+      <div class="search-container">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="search-input" placeholder="Search documentation...">
+        <div id="search-results" style="display: none;"></div>
+      </div>
+      
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        {% if repo_owner and repo_name %}
+        <a class="github-btn" href="https://github.com/{{ repo_owner }}/{{ repo_name }}" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        {% endif %}
+        <!-- Theme Switcher Toggle Button -->
+        <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle light/dark theme">
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <article class="content">
+      {{ content | safe }}
+    </article>
+  </main>
+
+  <aside class="right-sidebar" id="right-sidebar">
+    <button class="right-sidebar-toggle" id="right-sidebar-toggle" aria-label="Toggle Outline Menu">
+      <svg id="toggle-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+    <!-- Page headings outline (collapsible TOC) -->
+    <div class="outline-section" id="outline-section">
+      <div class="outline-body" id="outline-body" style="display: block; max-height: calc(100vh - 120px); overflow-y: auto;">
+        <!-- Filled dynamically by JS -->
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    {% include "script.js" %}
+  </script>
+</body>
+</html>
+

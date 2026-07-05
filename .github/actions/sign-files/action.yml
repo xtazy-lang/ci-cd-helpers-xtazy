@@ -1,0 +1,72 @@
+name: Sign Files
+description: Install xsig and sign files with a master-delegated child key.
+inputs:
+  files:
+    required: false
+    default: ""
+    description: Newline-separated files to sign.
+  file-list:
+    required: false
+    default: ""
+    description: Path to a newline-separated signing plan file.
+  private:
+    required: true
+    description: Path to the encrypted child private key record.
+  delegation:
+    required: true
+    description: Path to the master-signed child delegation record.
+  password-env:
+    required: false
+    default: XSIG_PASSWORD
+    description: Environment variable containing the child private key password.
+  xsig-version:
+    required: false
+    default: v0.1.0
+    description: Git tag of the xsig CLI to install.
+  xsig-git:
+    required: false
+    default: https://github.com/xtazy-lang/xsig.git
+    description: Git repository used to install xsig.
+  xsig-bin:
+    required: false
+    default: xsig
+    description: xsig binary name/path used by the signing script.
+  install-xsig:
+    required: false
+    default: "true"
+    description: Install xsig with cargo before signing.
+runs:
+  using: composite
+  steps:
+    - name: Install Rust
+      if: ${{ inputs['install-xsig'] == 'true' }}
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install xsig
+      if: ${{ inputs['install-xsig'] == 'true' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        cargo install \
+          --git "${{ inputs['xsig-git'] }}" \
+          --tag "${{ inputs['xsig-version'] }}" \
+          --locked \
+          xsig
+
+    - shell: bash
+      env:
+        FILES: ${{ inputs.files }}
+      run: |
+        set -euo pipefail
+        root="$(cd "$GITHUB_ACTION_PATH/../../.." && pwd)"
+        file_list="$(mktemp)"
+        printf '%s\n' "$FILES" > "$file_list"
+        if [[ -n "${{ inputs['file-list'] }}" ]]; then
+          cat "${{ inputs['file-list'] }}" >> "$file_list"
+        fi
+        python3 "$root/scripts/sign_files.py" \
+          --file-list "$file_list" \
+          --private "${{ inputs.private }}" \
+          --delegation "${{ inputs.delegation }}" \
+          --password-env "${{ inputs['password-env'] }}" \
+          --xsig-bin "${{ inputs['xsig-bin'] }}"

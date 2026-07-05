@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "outputs": [
+    {
+      "path": "targets.tsv",
+      "template": "templates/targets.tsv.xtpl"
+    }
+  ]
+}

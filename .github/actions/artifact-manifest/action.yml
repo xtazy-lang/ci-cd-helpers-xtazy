@@ -1,0 +1,59 @@
+name: Artifact Manifest
+description: Write metadata for one built release artifact.
+inputs:
+  artifact:
+    required: true
+    description: Built artifact file path.
+  output:
+    required: true
+    description: Output manifest JSON path.
+  version:
+    required: true
+    description: Release version.
+  prefix:
+    required: true
+    description: Artifact prefix.
+  suffix:
+    required: true
+    description: Artifact target suffix.
+  family:
+    required: true
+    description: Artifact platform family.
+  lookup-os:
+    required: true
+    description: OS lookup name.
+  lookup-arch:
+    required: true
+    description: JSON array of architecture lookup names.
+  archive-format:
+    required: true
+    description: Archive/package format.
+  target:
+    required: true
+    description: Rust target triple.
+  os:
+    required: true
+    description: Matrix OS name.
+  arch:
+    required: true
+    description: Matrix architecture name.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -euo pipefail
+        root="$(cd "$GITHUB_ACTION_PATH/../../.." && pwd)"
+        python3 "$root/scripts/artifact_manifest.py" write \
+          --out "${{ inputs.output }}" \
+          --artifact "${{ inputs.artifact }}" \
+          --version "${{ inputs.version }}" \
+          --prefix "${{ inputs.prefix }}" \
+          --suffix "${{ inputs.suffix }}" \
+          --family "${{ inputs.family }}" \
+          --lookup-os "${{ inputs['lookup-os'] }}" \
+          --lookup-arch '${{ inputs['lookup-arch'] }}' \
+          --archive-format "${{ inputs['archive-format'] }}" \
+          --target "${{ inputs.target }}" \
+          --os "${{ inputs.os }}" \
+          --arch "${{ inputs.arch }}"

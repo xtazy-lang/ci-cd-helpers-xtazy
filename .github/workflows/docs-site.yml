@@ -1,0 +1,82 @@
+name: Docs Site
+
+on:
+  workflow_call:
+    inputs:
+      logo:
+        required: false
+        type: string
+        default: ""
+      styles-json:
+        required: false
+        type: string
+        default: ""
+      subpath:
+        required: false
+        type: string
+        default: ""
+      crate-name:
+        required: false
+        type: string
+        default: ""
+      out-dir:
+        required: false
+        type: string
+        default: docs-out
+      docs-root:
+        required: false
+        type: string
+        default: ""
+      include-rust-api:
+        required: false
+        type: string
+        default: "auto"
+      cname:
+        required: false
+        type: string
+        default: ""
+      deploy-pages:
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.docs.outputs.page_url }}
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v4
+
+      - name: Checkout helper repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .ci-cd-helpers
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - id: docs
+        uses: ./.ci-cd-helpers/.github/actions/docs-site
+        with:
+          logo: ${{ inputs.logo }}
+          styles-json: ${{ inputs['styles-json'] }}
+          subpath: ${{ inputs.subpath }}
+          crate-name: ${{ inputs['crate-name'] }}
+          out-dir: ${{ inputs['out-dir'] }}
+          docs-root: ${{ inputs['docs-root'] }}
+          include-rust-api: ${{ inputs['include-rust-api'] }}
+          cname: ${{ inputs.cname }}
+          deploy-pages: ${{ inputs['deploy-pages'] }}

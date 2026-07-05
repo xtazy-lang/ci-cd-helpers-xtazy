@@ -1,0 +1,94 @@
+name: Docs Site
+description: Build a static documentation site from Markdown files and optional Rust API docs.
+inputs:
+  logo:
+    description: Path to a logo file such as SVG/PNG, or a logo URL.
+    required: false
+    default: ""
+  styles-json:
+    description: Path to a custom style JSON file or inline JSON string override.
+    required: false
+    default: ""
+  publish-to-pages:
+    description: Configure Pages and upload the generated site as a Pages artifact.
+    required: false
+    default: "false"
+  deploy-pages:
+    description: Deploy the uploaded Pages artifact. Requires pages permissions and environment setup.
+    required: false
+    default: "false"
+  subpath:
+    description: Subpath where the documentation should live, for example docs, or empty for root.
+    required: false
+    default: ""
+  crate-name:
+    description: Specific Rust crate name to build docs for.
+    required: false
+    default: ""
+  out-dir:
+    description: Directory where the final styled documentation site is built.
+    required: false
+    default: "docs-out"
+  docs-root:
+    description: Root directory for markdown docs (empty preserves default discovery).
+    required: false
+    default: ""
+  include-rust-api:
+    description: Include Rust API docs generation (true, false, or auto if Cargo.toml exists).
+    required: false
+    default: "auto"
+  cname:
+    description: Optional custom domain written to CNAME before uploading a Pages artifact.
+    required: false
+    default: ""
+outputs:
+  page_url:
+    description: Deployed GitHub Pages URL when deploy-pages is true.
+    value: ${{ steps.deployment.outputs.page_url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install Python dependencies
+      shell: bash
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install markdown jinja2 pygments
+
+    - name: Build documentation site
+      shell: bash
+      run: |
+        set -euo pipefail
+        root="$(cd "$GITHUB_ACTION_PATH/../../.." && pwd)"
+        python3 "$root/scripts/docs_site/build.py" \
+          --logo "${{ inputs.logo }}" \
+          --styles "${{ inputs.styles-json }}" \
+          --repo-owner "${{ github.repository_owner }}" \
+          --repo-name "${{ github.event.repository.name }}" \
+          --subpath "${{ inputs.subpath }}" \
+          --out-dir "${{ inputs.out-dir }}" \
+          --crate-name "${{ inputs.crate-name }}" \
+          --docs-root "${{ inputs.docs-root }}" \
+          --include-rust-api "${{ inputs.include-rust-api }}"
+
+    - name: Write CNAME
+      if: ${{ inputs.cname != '' && (inputs.publish-to-pages == 'true' || inputs.deploy-pages == 'true') }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        printf '%s\n' "${{ inputs.cname }}" > "${{ inputs.out-dir }}/CNAME"
+
+    - name: Configure Pages
+      if: ${{ inputs.publish-to-pages == 'true' || inputs.deploy-pages == 'true' }}
+      uses: actions/configure-pages@v5
+
+    - name: Upload Pages Artifact
+      if: ${{ inputs.publish-to-pages == 'true' || inputs.deploy-pages == 'true' }}
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ${{ inputs.out-dir }}
+
+    - name: Deploy Pages
+      id: deployment
+      if: ${{ inputs.deploy-pages == 'true' }}
+      uses: actions/deploy-pages@v4

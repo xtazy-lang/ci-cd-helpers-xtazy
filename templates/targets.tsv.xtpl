@@ -1,0 +1,5 @@
+{% for artifact in artifacts %}
+{% for arch in artifact.lookup_arch %}
+{{ artifact.family | tsv }}	{{ artifact.lookup_os | tsv }}_{{ arch | tsv }}	{{ artifact.suffix | tsv }}	{{ artifact.sha256 | tsv }}
+{% endfor %}
+{% endfor %}
